@@ -1,0 +1,99 @@
+테이블당 기본키 하나는 있어야한다.
+그래야 데이터의 무결성과 일관성를 보장할 수 있다.
+
+primary 두개 하고 싶으면 끝에 
+varchar2(15),
+primary key (deptid, deptname); 이캐 적으면 됨
+
+not null 은 테이블 조건에서 안된다.
+이유불문 컬럼 레벨에서 지정해줘야한다.
+ex) varchar2(10) not null,
+
+--외래키
+컬럼 레벨로 하면
+references department (depid),
+
+테이블 레벨로 하면
+constraint FK_emp_depid foreign key (depid) references department (depid),
+
+아예 밖에서 하면
+alter table employee
+add constraint FK_emp_depid foreign key (depid) references department (depid);
+
+데이터무결성과 일관성을 위해 기본키 외래키가 필요하다
+
+부모자식 아니라도 조인 가능함
+개발자 시각대로 인거임 db하면 신경써야함
+
+사용자가 사용하기 편해야한다. 중요
+
+테이블 수정은 alter
+add/modify/drop
+유일하게 not null만 제약 조건 추가할 때 modify를 써야한다. 이유는?
+drop () 여러개 삭제 가능 / drop column은 하나만
+
+
+날짜 타입 조심할 것
+한글 데이터베이스는 23/01/19가 사용 가능하지만
+밖에 나가면 모름 
+그래서 쓸 때 항상 to_date('23/01/19' , 'yy/mm/dd') 써 주기 앞이랑 뒤랑 형식 같게
+'20230119' 'YYYYMMDD'도 가능하다.
+
+
+join 조건 꼭 지켜주기
+
+--오라클 조인
+select e.empname, e.hiredate, d.deptname
+from employee e , department d
+where d.depid = e.depid
+and e.depid = 1001;
+
+조인조건 where e.deptid = d.deptid //on이랑 where의 차이점은?
+
+안시 조인 join을 쓰면 on을 적어주어야한다.
+--안시조인
+select e.empname, e.hiredate, d.deptname
+from employee e inner join department d
+on d.depid = e.depid
+where e.depid = 1001;
+
+
+inner join 은 그냥 join이라고 써도된다.
+inner join ↔ outer join
+
+
+delete from employee; = truncate table employee;
+차이점: 롤백이 가능하냐 못하냐 truncate은 롤백 불가능
+
+create or replace view 이렇게 쓰지 말기
+덮어쓰기 될 수 있기때문에 조심해야하기 때문
+create view 로 쓰기
+
+create view ga (ename, eadd, ddept)
+as
+select e.empname, e.addr, d.deptname
+from employee e inner join department d
+on e.depid = d.depid
+where e.depid = 1001;
+create view ga
+as
+select e.empname ename, e.addr eadd, d.deptname ddept
+from employee e inner join department d
+on e.depid = d.depid
+where e.depid = 1001;
+
+
+문자열 값 찾기 할때
+upper를 쓰던지 lower을 쓰는 것을 추천한다.
+where upper(job_id) = 'ST_CLERK'
+
+날짜 비교는 
+hire_date > '02-01-01' 이렇게 하지 말것
+to_char(hire_date, 'YYYY') > '2002' 이게 좀더 명확한 방법
+
+그사람이 근무한 개월수
+trunc(months_between(sysdate, hire_date))
+개월 나누기 12 는 년수
+trunc(months_between(sysdate, hire_date/12))
+
+trunc(mod (months_between(sysdate, hire_date), 12))
